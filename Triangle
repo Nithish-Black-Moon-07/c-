@@ -1,0 +1,24 @@
+#include <string.h>
+
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+
+int minimumTotal(int** triangle, int triangleSize, int* triangleColSize) {
+    // Create a DP array to store the bottom row values initially
+    int dp[triangleSize];
+    
+    // Initialize the DP array with the values of the bottom-most row
+    for (int i = 0; i < triangleSize; i++) {
+        dp[i] = triangle[triangleSize - 1][i];
+    }
+    
+    // Iterate from the second-to-last row up to the top row
+    for (int row = triangleSize - 2; row >= 0; row--) {
+        for (int col = 0; col <= row; col++) {
+            // The minimum path to the current element depends on its two children below it
+            dp[col] = triangle[row][col] + MIN(dp[col], dp[col + 1]);
+        }
+    }
+    
+    // The top element now holds the minimum path sum
+    return dp[0];
+}
