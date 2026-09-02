@@ -1,0 +1,81 @@
+#include <string.h>
+#include <stdlib.h>
+
+// Helper function to check if two words differ by exactly one character
+int isNeighbor(const char* s1, const char* s2) {
+    int diff = 0;
+    while (*s1) {
+        if (*s1 != *s2) {
+            diff++;
+            if (diff > 1) return 0; // More than 1 character difference
+        }
+        s1++;
+        s2++;
+    }
+    return diff == 1;
+}
+
+// Structure for BFS queue elements
+typedef struct {
+    char* word;
+    int level;
+} QueueNode;
+
+int ladderLength(char* beginWord, char* endWord, char** wordList, int wordListSize) {
+    // 1. Check if endWord exists in the wordList
+    int endWordExists = 0;
+    for (int i = 0; i < wordListSize; i++) {
+        if (strcmp(wordList[i], endWord) == 0) {
+            endWordExists = 1;
+            break;
+        }
+    }
+    if (!endWordExists) return 0;
+
+    // 2. Initialize the unvisited list with indices from wordList
+    int* unvisited = (int*)malloc(wordListSize * sizeof(int));
+    for (int i = 0; i < wordListSize; i++) {
+        unvisited[i] = i;
+    }
+    int unvisitedCount = wordListSize;
+
+    // 3. Initialize BFS queue
+    // Maximum possible elements in queue is wordListSize + 1
+    QueueNode* queue = (QueueNode*)malloc((wordListSize + 1) * sizeof(QueueNode));
+    int head = 0, tail = 0;
+
+    // Enqueue the beginWord with a level of 1
+    queue[tail++] = (QueueNode){beginWord, 1};
+
+    // 4. Start BFS loop
+    while (head < tail) {
+        QueueNode current = queue[head++];
+        
+        // If we reached the target endWord, return the level
+        if (strcmp(current.word, endWord) == 0) {
+            free(unvisited);
+            free(queue);
+            return current.level;
+        }
+
+        // Check against all remaining unvisited words
+        for (int i = 0; i < unvisitedCount; i++) {
+            int wordIdx = unvisited[i];
+            
+            if (isNeighbor(current.word, wordList[wordIdx])) {
+                // Enqueue the neighbor with incremented level
+                queue[tail++] = (QueueNode){wordList[wordIdx], current.level + 1};
+                
+                // Remove from unvisited by swapping with the last available element
+                unvisited[i] = unvisited[unvisitedCount - 1];
+                unvisitedCount--;
+                i--; // Stay at the same index to check the swapped element
+            }
+        }
+    }
+
+    // Clean up memory if no path is found
+    free(unvisited);
+    free(queue);
+    return 0;
+}
