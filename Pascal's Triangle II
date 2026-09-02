@@ -1,0 +1,18 @@
+/**
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+int* getRow(int rowIndex, int* returnSize) {
+    // The number of elements in the row is rowIndex + 1
+    *returnSize = rowIndex + 1;
+    int* row = (int*)malloc((*returnSize) * sizeof(int));
+    
+    // The first element is always 1
+    row[0] = 1;
+    
+    for (int i = 1; i <= rowIndex; i++) {
+        // Use long long for the intermediate product to prevent integer overflow
+        row[i] = (int)((long long)row[i - 1] * (rowIndex - i + 1) / i);
+    }
+    
+    return row;
+}
