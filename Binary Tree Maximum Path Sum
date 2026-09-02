@@ -1,0 +1,33 @@
+#include <limits.h>
+
+// Helper macro to find the maximum of two values
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
+// Recursive function to calculate max gain and update global maximum
+int calculateMaxGain(struct TreeNode* node, int* globalMax) {
+    if (node == NULL) {
+        return 0;
+    }
+
+    // Recursively get the max path sum from left and right subtrees.
+    // If a subtree returns a negative sum, we discard it by taking MAX(0, ...).
+    int leftGain = MAX(0, calculateMaxGain(node->left, globalMax));
+    int rightGain = MAX(0, calculateMaxGain(node->right, globalMax));
+
+    // Price of the path where the current node is the highest turning point
+    int currentPathSum = node->val + leftGain + rightGain;
+
+    // Update the global maximum path sum found so far
+    if (currentPathSum > *globalMax) {
+        *globalMax = currentPathSum;
+    }
+
+    // Return the max path sum the parent node can use (can only choose one child)
+    return node->val + MAX(leftGain, rightGain);
+}
+
+int maxPathSum(struct TreeNode* root) {
+    int globalMax = INT_MIN;
+    calculateMaxGain(root, &globalMax);
+    return globalMax;
+}
