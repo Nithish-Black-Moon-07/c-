@@ -1,0 +1,33 @@
+/**
+ * Return an array of arrays of size *returnSize.
+ * The sizes of the arrays are returned as *returnColumnSizes array.
+ * Note: Both returned array and *returnColumnSizes array must be malloced, assume caller calls free().
+ */
+int** generate(int numRows, int* returnSize, int** returnColumnSizes) {
+    // 1. Set the total number of rows to return
+    *returnSize = numRows;
+    
+    // 2. Allocate memory for row sizes and the main 2D array
+    *returnColumnSizes = (int*)malloc(numRows * sizeof(int));
+    int** result = (int**)malloc(numRows * sizeof(int*));
+    
+    for (int i = 0; i < numRows; i++) {
+        // Each row 'i' has exactly 'i + 1' elements
+        int numCols = i + 1;
+        (*returnColumnSizes)[i] = numCols;
+        
+        // Allocate memory for the current row
+        result[i] = (int*)malloc(numCols * sizeof(int));
+        
+        // First and last elements of every row are always 1
+        result[i][0] = 1;
+        result[i][i] = 1;
+        
+        // Calculate intermediate values based on the row above
+        for (int j = 1; j < i; j++) {
+            result[i][j] = result[i - 1][j - 1] + result[i - 1][j];
+        }
+    }
+    
+    return result;
+}
