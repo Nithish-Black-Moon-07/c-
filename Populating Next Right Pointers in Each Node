@@ -1,0 +1,43 @@
+/**
+ * Definition for a Node.
+ * struct Node {
+ *     int val;
+ *     struct Node *left;
+ *     struct Node *right;
+ *     struct Node *next;
+ * };
+ */
+
+struct Node* connect(struct Node* root) {
+    if (!root) {
+        return NULL;
+    }
+    
+    struct Node* levelStart = root;
+    
+    // Traverse down level by level
+    while (levelStart->left) {
+        struct Node* curr = levelStart;
+        
+        // Traverse across the current level
+        while (curr) {
+            // Connect left child to right child
+            curr->left->next = curr->right;
+            
+            // Connect right child to the adjacent neighbor's left child
+            if (curr->next) {
+                curr->right->next = curr->next->left;
+            } else {
+                curr->right->next = NULL;
+            }
+            
+            // Move to the next node on the current level
+            curr = curr->next;
+        }
+        
+        // Move to the start of the next level
+        levelStart = levelStart->left;
+    }
+    
+    return root;
+}
