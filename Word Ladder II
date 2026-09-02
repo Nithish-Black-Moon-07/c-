@@ -1,0 +1,133 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+// Helper function to check if two words differ by exactly one character
+bool isNeighbor(const char* a, const char* b) {
+    int diff = 0;
+    while (*a && diff < 2) {
+        if (*a != *b) diff++;
+        a++; b++;
+    }
+    return diff == 1;
+}
+
+// Global/reusable variables for DFS tracking
+char*** resultPaths;
+int* resultColSizes;
+int resultSize;
+int resultCapacity;
+
+int* currentPath;
+int currentPathLen;
+
+// DFS to find all shortest paths
+void dfs(int u, int endIdx, char** allWords, int* dist, int totalWords) {
+    currentPath[currentPathLen++] = u;
+    
+    if (u == endIdx) {
+        // Expand result array capacity if needed
+        if (resultSize >= resultCapacity) {
+            resultCapacity = resultCapacity == 0 ? 64 : resultCapacity * 2;
+            resultPaths = realloc(resultPaths, resultCapacity * sizeof(char**));
+            resultColSizes = realloc(resultColSizes, resultCapacity * sizeof(int));
+        }
+        
+        // Allocate and copy the valid path
+        resultPaths[resultSize] = malloc(currentPathLen * sizeof(char*));
+        for (int i = 0; i < currentPathLen; i++) {
+            resultPaths[resultSize][i] = strdup(allWords[currentPath[i]]);
+        }
+        resultColSizes[resultSize] = currentPathLen;
+        resultSize++;
+    } else {
+        // Explore neighbors that lie on the shortest path
+        for (int v = 0; v < totalWords; v++) {
+            if (dist[v] == dist[u] + 1 && isNeighbor(allWords[u], allWords[v])) {
+                dfs(v, endIdx, allWords, dist, totalWords);
+            }
+        }
+    }
+    
+    currentPathLen--; // Backtrack
+}
+
+char*** findLadders(char* beginWord, char* endWord, char** wordList, int wordListSize, int* returnSize, int** returnColumnSizes) {
+    // Reset global tracking variables
+    resultSize = 0;
+    resultCapacity = 0;
+    resultPaths = NULL;
+    resultColSizes = NULL;
+    
+    // Find if endWord exists in the list
+    int endIdx = -1;
+    for (int i = 0; i < wordListSize; i++) {
+        if (strcmp(wordList[i], endWord) == 0) {
+            endIdx = i;
+            break;
+        }
+    }
+    if (endIdx == -1) {
+        *returnSize = 0;
+        *returnColumnSizes = NULL;
+        return NULL;
+    }
+    
+    // Create combined array of words including beginWord at the end
+    int totalWords = wordListSize + 1;
+    char** allWords = malloc(totalWords * sizeof(char*));
+    for (int i = 0; i < wordListSize; i++) {
+        allWords[i] = wordList[i];
+    }
+    allWords[wordListSize] = beginWord;
+    int beginIdx = wordListSize;
+    
+    // BFS configuration
+    int* dist = malloc(totalWords * sizeof(int));
+    for (int i = 0; i < totalWords; i++) dist[i] = 1e9; // Initialize with infinity
+    
+    int* queue = malloc(totalWords * sizeof(int));
+    int head = 0, tail = 0;
+    
+    dist[beginIdx] = 0;
+    queue[tail++] = beginIdx;
+    
+    // Run BFS to populate shortest distances
+    while (head < tail) {
+        int u = queue[head++];
+        for (int v = 0; v < totalWords; v++) {
+            if (dist[v] == 1e9 && isNeighbor(allWords[u], allWords[v])) {
+                dist[v] = dist[u] + 1;
+                queue[tail++] = v;
+            }
+        }
+    }
+    
+    // If endWord is unreachable, return empty array
+    if (dist[endIdx] == 1e9) {
+        free(allWords);
+        free(dist);
+        free(queue);
+        *returnSize = 0;
+        *returnColumnSizes = NULL;
+        return NULL;
+    }
+    
+    // Run DFS to collect all paths matching the shortest distance
+    currentPath = malloc(totalWords * sizeof(int));
+    currentPathLen = 0;
+    dfs(beginIdx, endIdx, allWords, dist, totalWords);
+    
+    // Set output parameters
+    *returnSize = resultSize;
+    *returnColumnSizes = resultColSizes;
+    
+    // Cleanup temporary heap memory
+    free(allWords);
+    free(dist);
+    free(queue);
+    free(currentPath);
+    
+    return resultPaths;
+}
